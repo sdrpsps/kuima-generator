@@ -1,0 +1,32 @@
+# 纯 API 镜像保留生成网页，不启用账号、后台、在线更新和持久化数据库。
+ARG GO_IMAGE=golang:1.22-alpine
+ARG RUNTIME_IMAGE=alpine:3.20
+FROM ${GO_IMAGE} AS builder
+WORKDIR /src
+ARG GOPROXY=https://goproxy.cn,direct
+ENV GOPROXY=${GOPROXY}
+COPY go.mod go.sum VERSION ./
+RUN go mod download
+COPY cmd/ ./cmd/
+COPY internal/ ./internal/
+COPY web/ ./web/
+ARG VERSION=
+ARG BUILD_TIME=unknown
+RUN V="${VERSION:-$(cat VERSION)}" && \
+    CGO_ENABLED=0 go build -trimpath \
+    -ldflags="-s -w -X wxcode/internal/config.Version=${V} -X wxcode/internal/config.BuildTime=${BUILD_TIME} -X wxcode/internal/config.forceAPIOnly=1" \
+    -o /wxcode ./cmd/wxcode
+
+FROM ${RUNTIME_IMAGE}
+ARG APK_MIRROR=mirrors.aliyun.com
+RUN sed -i "s|dl-cdn.alpinelinux.org|${APK_MIRROR}|g" /etc/apk/repositories && \
+    apk add --no-cache ca-certificates tzdata
+COPY --from=builder /wxcode /usr/local/bin/wxcode
+ENV TZ=Asia/Shanghai PORT=8080
+WORKDIR /tmp
+USER 10001:10001
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget -qO- "http://127.0.0.1:${PORT}/api/health" >/dev/null || exit 1
+STOPSIGNAL SIGTERM
+ENTRYPOINT ["/usr/local/bin/wxcode"]

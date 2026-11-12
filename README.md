@@ -144,6 +144,17 @@ API_ONLY=1 docker compose up -d --build
 
 纯 API 模式使用进程内临时数据库，不创建管理员、不写调用记录，也不读取或修改原有的数据目录；重启后临时图片地址失效。移除 `API_ONLY` 或设为 `0` 后，以原有数据恢复普通模式。
 
+也可以构建专用精简镜像，启动时无需设置 `API_ONLY`：
+
+```bash
+docker build -f Dockerfile.api-only -t kuima-generator:api-only-slim .
+docker run -d --name kuima-api -p 8080:8080 kuima-generator:api-only-slim
+```
+
+该镜像固定使用纯 API 模式，保留生成网页和 API，不包含 Go 编译器或 Git，也不提供后台在线更新。需要升级时重新构建并替换容器；不能通过环境变量切回普通模式。
+
+GitHub Actions 会将 `linux/amd64` 和 `linux/arm64` 镜像发布到 `ghcr.io/<仓库所有者>/<仓库名>-api-only`。主分支使用 `latest` 标签，其他分支使用分支名标签（斜杠转换为短横线），同时提供 `sha-` 开头的提交标签；版本标签推送时也会发布对应镜像标签。首次发布的 GHCR 包可能需要在 GitHub Packages 中调整可见性才能匿名拉取。
+
 ## 在线更新
 
 后台「概览 → 版本与更新」：
