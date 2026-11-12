@@ -2,12 +2,8 @@ name: Publish Docker images
 
 on:
   push:
-    branches:
-      - main
-      - codex/api-only-mode
     tags:
       - 'v*'
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -41,7 +37,7 @@ jobs:
         with:
           images: ${{ steps.image.outputs.name }}
           tags: |
-            type=raw,value=latest,enable=${{ github.ref_type == 'branch' }}
+            type=raw,value=latest
             type=ref,event=tag
 
       - name: Prepare API-only image tags
@@ -50,7 +46,7 @@ jobs:
         with:
           images: ${{ steps.image.outputs.name }}
           tags: |
-            type=raw,value=api-only,enable=${{ github.ref_type == 'branch' }}
+            type=raw,value=api-only
             type=ref,event=tag,suffix=-api-only
 
       - name: Set up QEMU

@@ -153,7 +153,7 @@ docker run -d --name kuima-api -p 8080:8080 kuima-generator:api-only-slim
 
 该镜像固定使用纯 API 模式，保留生成网页和 API，不包含 Go 编译器或 Git，也不提供后台在线更新。需要升级时重新构建并替换容器；不能通过环境变量切回普通模式。
 
-GitHub Actions 会将 `linux/amd64` 和 `linux/arm64` 镜像发布到 `ghcr.io/<仓库所有者>/<仓库名>`：不指定标签时默认的 `latest` 是完整版本，`api-only` 标签是纯 API 精简版本。例如，推送 Git 标签 `v1.2.3` 时，两个镜像分别使用 `v1.2.3` 和 `v1.2.3-api-only` 标签。首次发布的 GHCR 包可能需要在 GitHub Packages 中调整可见性才能匿名拉取。
+推送 `v*` Git 版本标签时，GitHub Actions 会将 `linux/amd64` 和 `linux/arm64` 镜像发布到 `ghcr.io/<仓库所有者>/<仓库名>`；普通分支推送不会触发发布。不指定镜像标签时默认的 `latest` 是完整版本，`api-only` 标签是纯 API 精简版本。例如，推送 Git 标签 `v1.2.3` 时，还会发布对应的 `v1.2.3` 和 `v1.2.3-api-only` 标签。首次发布的 GHCR 包可能需要在 GitHub Packages 中调整可见性才能匿名拉取。
 
 ## 在线更新
 
