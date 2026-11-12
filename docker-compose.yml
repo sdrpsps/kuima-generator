@@ -20,6 +20,10 @@ services:
       - PORT=8080
       - TZ=Asia/Shanghai
       - DATA_DIR=/app/data
+      # 纯 API 模式：保留生成网页和接口，不启用账号及管理功能
+      - API_ONLY=${API_ONLY:-0}
+      # 纯 API 模式下允许跨域的来源，逗号分隔；留空表示不允许跨域
+      - API_CORS_ORIGINS=${API_CORS_ORIGINS:-}
       # 管理员账号：不填 ADMIN_PASSWORD 时首次启动随机生成，只在日志里打印一次：
       #   docker compose logs wxcode | grep 管理员
       # 也可以在 .env 里写好 ADMIN_USER / ADMIN_PASSWORD，部署后直接用它登录。

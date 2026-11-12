@@ -6,6 +6,7 @@ import (
 	_ "image/png"
 	"net/http"
 
+	"wxcode/internal/config"
 	"wxcode/internal/middleware"
 )
 
@@ -15,6 +16,9 @@ import (
 
 // newRouter 注册全部路由（页面、账号、管理端、三个 API），并套上访问日志。
 func NewRouter() http.Handler {
+	if config.APIOnly() {
+		return newAPIOnlyRouter()
+	}
 	mux := http.NewServeMux()
 
 	// 静态资源
@@ -134,4 +138,27 @@ func NewRouter() http.Handler {
 	// 也不带 API Key，sameOriginGuard 本来就会放行它，不会互相打架。
 	return middleware.SecurityHeaders(middleware.WithRequestID(middleware.WithRecover(middleware.LogRequests(
 		middleware.WithGzip(middleware.BlockBlacklistIP(middleware.SameOriginGuard(middleware.CorsMiddleware(mux))))))))
+}
+
+// newAPIOnlyRouter exposes the generation page and public generation and decoding API.
+func newAPIOnlyRouter() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /{$}", handleIndex)
+	mux.HandleFunc("/favicon.ico", handleIconPNG)
+	mux.HandleFunc("/icon.png", handleIconPNG)
+	mux.HandleFunc("/apple-touch-icon.png", handleIconPNG)
+	mux.HandleFunc("/vendor/bootstrap.min.css", handleVendorCSS)
+	mux.HandleFunc("/badge.png", handleBadgePNG)
+	mux.HandleFunc("/layer.js", handleLayerJS)
+	mux.HandleFunc("/api/docs.md", handleAPIDocs)
+	mux.HandleFunc("/api/openapi.json", handleOpenAPI)
+	mux.HandleFunc("/api/postman.json", handlePostman)
+	mux.HandleFunc("/api/health", handleHealth)
+	mux.HandleFunc("GET /api/code/{name}", handleCodeAsset)
+	mux.HandleFunc("/api/encode", middleware.ProtectAPI(middleware.WithHeavyGuard(handleEncode)))
+	mux.HandleFunc("/api/encode/batch", middleware.ProtectAPI(middleware.WithHeavyGuard(handleEncodeBatch)))
+	mux.HandleFunc("/api/decode", middleware.ProtectAPI(middleware.WithHeavyGuard(handleDecode)))
+	mux.HandleFunc("/api/qr", middleware.ProtectAPI(middleware.WithHeavyGuard(handleQR)))
+	return middleware.SecurityHeaders(middleware.WithRequestID(middleware.WithRecover(middleware.LogRequests(
+		middleware.WithGzip(middleware.CorsMiddleware(mux))))))
 }

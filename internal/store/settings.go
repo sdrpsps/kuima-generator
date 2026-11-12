@@ -1,10 +1,12 @@
 package store
 
 import (
+	"os"
 	"strconv"
 	"strings"
 	"sync/atomic"
 
+	"wxcode/internal/config"
 	"wxcode/internal/model"
 	"wxcode/internal/watermark"
 )
@@ -109,6 +111,11 @@ func LoadSettings() model.Settings {
 		return *p
 	}
 	s := readSettings()
+	if config.APIOnly() {
+		s.RecordEnabled = false
+		s.CORSOrigins = os.Getenv("API_CORS_ORIGINS")
+		s.WatermarkMode = model.WatermarkAll
+	}
 	SettingsCache.Store(&s)
 	return s
 }

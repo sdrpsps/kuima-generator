@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"wxcode/internal/config"
 	"wxcode/internal/logger"
 	"wxcode/internal/model"
 	"wxcode/internal/passwd"
@@ -33,6 +34,9 @@ func migrate() error {
 		if _, err := DB.Exec(`INSERT OR IGNORE INTO settings(k, v) VALUES(?, ?)`, k, v); err != nil {
 			return fmt.Errorf("初始化配置失败: %w", err)
 		}
+	}
+	if config.APIOnly() {
+		return nil
 	}
 	return ensureAdmin()
 }

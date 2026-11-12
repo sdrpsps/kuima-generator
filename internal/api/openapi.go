@@ -1342,8 +1342,11 @@ func buildOpenAPI(baseURL string) map[string]any {
 			// 带 // 注释的示例，接口页直接展示（注释已对齐）
 			item["x-wxcode-request-example"] = jsoncAlign(op.RequestExample)
 		}
-		if sec := openAPISecurity(op.Auth); len(sec) > 0 {
+		if sec := openAPISecurity(op.Auth); !config.APIOnly() && len(sec) > 0 {
 			item["security"] = sec
+		}
+		if config.APIOnly() {
+			item["x-wxcode-auth"] = "none"
 		}
 		if len(op.Params) > 0 {
 			params := make([]any, 0, len(op.Params))
@@ -1373,12 +1376,16 @@ func buildOpenAPI(baseURL string) map[string]any {
 		path[strings.ToLower(op.Method)] = item
 	}
 
+	description := "太阳码（WX_CODE）生成、解析与账号管理接口。右侧的 Try it 可直接在浏览器里发请求。"
+	if config.APIOnly() {
+		description = "纯 API 模式：太阳码生成与解析，无需登录或 API Key。"
+	}
 	return map[string]any{
 		"openapi": "3.0.3",
 		"info": map[string]any{
 			"title":       st.SiteName + " API",
 			"version":     config.Version,
-			"description": "太阳码（WX_CODE）生成、解析与账号管理接口。右侧的 Try it 可直接在浏览器里发请求。",
+			"description": description,
 		},
 		"servers": []any{map[string]any{"url": baseURL, "description": "当前站点"}},
 		"tags":    publicAPITags(ops),

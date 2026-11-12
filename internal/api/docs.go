@@ -47,7 +47,9 @@ func apiMarkdown(baseURL string, now time.Time) string {
 	w("---\n\n## 二、通用约定\n\n")
 	w("| 项 | 说明 |\n|---|---|\n")
 	authRow := "生成 / 解析默认匿名可用；也可带 `X-API-Key` 调用，便于计费和限流"
-	if st.RequireLogin {
+	if config.APIOnly() {
+		authRow = "纯 API 模式无需登录或 API Key，不设账号额度"
+	} else if st.RequireLogin {
 		authRow = "生成 / 解析**必须**带 `X-API-Key`（本站已开启「使用需要登录」）"
 	}
 	w("| 鉴权 | %s |\n", authRow)
@@ -256,7 +258,19 @@ func apiMarkdown(baseURL string, now time.Time) string {
 	w("额度用尽：`403 {\"error\":\"额度已用完，请联系管理员增加额度\"}`；\n")
 	w("需要登录：`401 {\"error\":\"该功能需要登录后使用\",\"needLogin\":true}`。\n\n")
 
-	return adjustDocsAuth(b.String(), st)
+	doc := b.String()
+	if config.APIOnly() {
+		doc = strings.ReplaceAll(doc, "账户、管理及其他站内接口不在本文档开放。", "纯 API 模式不提供账户和管理接口。")
+		doc = strings.ReplaceAll(doc, "默认**不允许**跨域；管理员配置来源白名单后才放行（见下）", "默认**不允许**跨域；通过 `API_CORS_ORIGINS` 配置来源白名单（见下）")
+		doc = strings.ReplaceAll(doc, "（匿名 / 登录，后台可配）", "（纯 API 模式使用匿名限额）")
+		doc = strings.ReplaceAll(doc, "可选；需要按 Key 计费或本站要求登录时填写「我的」页面复制的 Key", "纯 API 模式无需填写")
+		doc = strings.Replace(doc, "需要开启请让管理员在后台「站点设置 → 跨域来源白名单」里配置。", "需要开启请设置环境变量 `API_CORS_ORIGINS`。", 1)
+		if i := strings.Index(doc, "## 十一、鉴权与额度（生成 / 解析）"); i >= 0 {
+			doc = doc[:i] + "## 十一、鉴权与额度\n\n纯 API 模式无需登录或 API Key，不设账号额度；如需鉴权，请配置反向代理或 API 网关。\n"
+		}
+		return doc
+	}
+	return adjustDocsAuth(doc, st)
 }
 
 // adjustDocsAuth 按「使用需要登录」开关改写文档：

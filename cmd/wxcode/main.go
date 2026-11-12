@@ -25,19 +25,27 @@ func main() {
 	addr := config.ListenAddr()
 
 	// 先开库：建表 + 初始化默认配置 + 首次创建管理员
-	if err := store.Open(config.DBPath()); err != nil {
+	dbPath := config.DBPath()
+	if config.APIOnly() {
+		dbPath = ":memory:"
+	}
+	if err := store.Open(dbPath); err != nil {
 		// 启动失败走 stderr：容器编排会把它当错误流收走
-		logger.Error("数据库初始化失败", "error", err.Error(), "db_path", config.DBPath())
+		logger.Error("数据库初始化失败", "error", err.Error(), "db_path", dbPath)
 		os.Exit(1)
 	}
-	store.CleanupSessions()
+	if !config.APIOnly() {
+		store.CleanupSessions()
+	}
 
 	// 定期清理过期会话与过期记录（启动时先清一次，之后每 6 小时一次）
 	janitorStop := make(chan struct{})
-	service.StartJanitor(janitorStop)
+	if !config.APIOnly() {
+		service.StartJanitor(janitorStop)
 
-	// 每天自动检查一次新版本（只更新缓存，后台页面读缓存显示提示；UPDATE_DISABLE=1 可关）
-	service.StartUpdateWatcher(janitorStop)
+		// 每天自动检查一次新版本（只更新缓存，后台页面读缓存显示提示；UPDATE_DISABLE=1 可关）
+		service.StartUpdateWatcher(janitorStop)
+	}
 
 	srv := &http.Server{
 		Addr:              addr,
@@ -63,7 +71,8 @@ func main() {
 		"go_version", runtime.Version(),
 		"pid", os.Getpid(),
 		"addr", addr,
-		"db_path", config.DBPath(),
+		"db_path", dbPath,
+		"api_only", config.APIOnly(),
 		"log_level", logger.CurrentLogConfig().Level().String(),
 		"log_format", logger.CurrentLogConfig().Format(),
 	)
@@ -111,6 +120,10 @@ func printBanner(addr string) {
 		return
 	}
 	if !config.EnvOnDefault("LOG_BANNER", true) {
+		return
+	}
+	if config.APIOnly() {
+		logger.Raw("葵码生成器：纯 API 模式\n监听地址: " + addr + "\n生成网页: /\n接口文档: /api/docs.md\n健康检查: /api/health\n")
 		return
 	}
 	banner := "========================================\n" +

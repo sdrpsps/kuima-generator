@@ -127,6 +127,22 @@ Windows 也可以直接双击 `wxcode.exe`：默认 8080 端口、数据在程�
 | `DATA_DIR` | 数据目录，默认 `./data`（数据库文件在这里） |
 | `ADMIN_USER` / `ADMIN_PASSWORD` | 首次启动创建的管理员账号 / 密码 |
 | `ADMIN_RESET_PASSWORD=1` | 忘记密码时，配合 `ADMIN_PASSWORD` 重启一次即可重置 |
+| `API_ONLY=1` | 启用纯 API 模式，默认关闭 |
+| `API_CORS_ORIGINS` | 纯 API 模式的跨域来源白名单，逗号分隔；`*` 允许所有来源，默认不允许跨域 |
+
+### 纯 API 模式
+
+需要生成网页和接口，但不需要账号与管理后台时，可设置 `API_ONLY=1` 启动：
+
+```bash
+API_ONLY=1 PORT=8080 ./wxcode
+# Docker Compose（使用仓库自带的 compose 文件）
+API_ONLY=1 docker compose up -d --build
+```
+
+此模式保留首页 `/`，可在网页生成、解析和使用接口调试台，支持自定义水印。接口包括 `/api/encode`、`/api/encode/batch`、`/api/decode`、`/api/qr`、生成结果的临时图片地址 `/api/code/{name}`，以及 `/api/health`、`/api/docs.md`、`/api/openapi.json`、`/api/postman.json`。账号和管理相关的页面及接口不可用。接口无需登录或 API Key，不设账号额度，仍有请求限速和并发保护；如需限制调用者，请在反向代理或 API 网关配置鉴权。默认不允许浏览器跨域，可通过 `API_CORS_ORIGINS=https://example.com` 配置。
+
+纯 API 模式使用进程内临时数据库，不创建管理员、不写调用记录，也不读取或修改原有的数据目录；重启后临时图片地址失效。移除 `API_ONLY` 或设为 `0` 后，以原有数据恢复普通模式。
 
 ## 在线更新
 

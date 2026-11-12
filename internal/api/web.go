@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"wxcode/internal/config"
 	"wxcode/internal/httpx"
 	"wxcode/internal/store"
 	webassets "wxcode/web"
@@ -48,6 +49,14 @@ func renderIndex(r *http.Request) []byte {
 	body = strings.ReplaceAll(body, bootstrapVersionToken, bootstrapVersion())
 	body = strings.ReplaceAll(body, siteNameToken, html.EscapeString(st.SiteName))
 	body = strings.ReplaceAll(body, iconVerToken, st.IconVer)
+	if config.APIOnly() {
+		body = strings.Replace(body, "<body>", `<body data-api-only="true">`, 1)
+		body = strings.Replace(body, "</style>", `[data-api-only="true"] #navAccount, [data-api-only="true"] #navAccountIcon, [data-api-only="true"] .api-authbar { display: none !important; }</style>`, 1)
+		body = strings.ReplaceAll(body, "左侧选择接口，右侧查看参数并直接发送请求。留空 Key 时使用当前浏览器登录会话。", "左侧选择接口，右侧查看参数并直接发送请求。")
+		body = strings.ReplaceAll(body, "Try it 请求与页面同源，会自动携带登录 Cookie", "无需登录即可调用接口")
+		body = strings.ReplaceAll(body, "默认匿名可用；管理员可开启「使用需要登录」。程序调用建议在请求头带 <code>X-API-Key</code>，需登录时网页会携带会话 Cookie。", "无需登录或 API Key。")
+		body = strings.ReplaceAll(body, "中心 logo 与待解析图片按后台配置限制", "中心 logo 限 8MB，待解析图片限 24MB")
+	}
 	body = decoratePage(body, st)
 	body = injectFooter(body, st)
 	return []byte(body)

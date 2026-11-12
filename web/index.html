@@ -1774,6 +1774,7 @@
   /* ---------- 预设 LOGO（管理员在后台维护，两个生成入口共用） ---------- */
   let presetLogos = null; // null = 还没拉过列表
   async function presetList() {
+	if (document.body.dataset.apiOnly === 'true') return [];
     if (presetLogos) return presetLogos;
     let items = [];
     try {
@@ -2699,6 +2700,7 @@
   const apiShellQuote = s => "'" + String(s).replace(/'/g, "'\\''") + "'";
 
   function apiKeyValue() {
+	if (document.body.dataset.apiOnly === 'true') return '';
     const el = $('#apiKeyAuth');
     return el ? el.value.trim() : '';
   }
@@ -3503,6 +3505,10 @@
 
   /* ================= 账号：PC 右上角 + 手机顶栏图标，两处同步 ================= */
   async function refreshAccount() {
+	if (document.body.dataset.apiOnly === 'true') {
+	  applyWatermarkUI({watermarkMode: 'all'}, null);
+	  return;
+	}
     const link = $('#navAccount'), text = $('#navAccountText');
     const icon = $('#navAccountIcon');
     const apply = (href, title, label) => {
