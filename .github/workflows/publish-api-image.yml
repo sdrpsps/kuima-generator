@@ -36,6 +36,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ steps.image.outputs.name }}
+          flavor: latest=false
           tags: |
             type=raw,value=latest
             type=ref,event=tag
@@ -45,6 +46,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ steps.image.outputs.name }}
+          flavor: latest=false
           tags: |
             type=raw,value=api-only
             type=ref,event=tag,suffix=-api-only

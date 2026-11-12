@@ -8,7 +8,7 @@
 
 <!-- 版本号与仓库根目录的 VERSION 文件保持一致 -->
 [![在线演示](https://img.shields.io/badge/%E5%9C%A8%E7%BA%BF%E6%BC%94%E7%A4%BA-wx.xbao.fun-2F6BFF?logo=googlechrome&logoColor=white)](https://wx.xbao.fun)
-[![Version](https://img.shields.io/badge/version-1.1.0-07C160)](https://github.com/AnglerS888/kuima-generator/releases)
+[![Version](https://img.shields.io/badge/version-1.1.1-07C160)](https://github.com/AnglerS888/kuima-generator/releases)
 [![Gitee](https://img.shields.io/badge/Gitee-anglers%2Fkuima--generator-C71D23?logo=gitee&logoColor=white)](https://gitee.com/anglers/kuima-generator)
 [![GitHub](https://img.shields.io/badge/GitHub-AnglerS888%2Fkuima--generator-181717?logo=github&logoColor=white)](https://github.com/AnglerS888/kuima-generator)
 ![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white)
